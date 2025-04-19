@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Modern indigo-based primary color */
+    --color-primary: 79 70 229;  /* indigo-600 */
+    --color-primary-light: 99 102 241;  /* indigo-500 */
+    --color-primary-dark: 67 56 202;  /* indigo-700 */
+    
+    /* Slate-based neutrals */
+    --color-secondary: 71 85 105;  /* slate-600 */
+    --color-secondary-light: 100 116 139;  /* slate-500 */
+    --color-secondary-dark: 51 65 85;  /* slate-700 */
+    
+    /* Success, error, warning */
+    --color-success: 22 163 74;  /* green-600 */
+    --color-error: 220 38 38;  /* red-600 */
+    --color-warning: 234 179 8;  /* yellow-500 */
+    
+    /* Background colors */
+    --color-background: 248 250 252;  /* slate-50 */
+    --color-surface: 255 255 255;  /* white */
+    
+    /* Text colors */
+    --color-text: 15 23 42;  /* slate-900 */
+    --color-text-secondary: 71 85 105;  /* slate-600 */
+    --color-text-tertiary: 148 163 184;  /* slate-400 */
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-sm;
+  }
+  
+  .btn-primary {
+    @apply bg-primary text-white hover:bg-primary-dark active:bg-primary-dark/90 
+           shadow-sm shadow-primary/10 hover:shadow-md hover:shadow-primary/20;
+  }
+  
+  .btn-secondary {
+    @apply bg-white text-gray-700 border border-gray-200
+           hover:bg-gray-50 hover:border-gray-300 active:bg-gray-100;
+  }
+
+  .btn-outline {
+    @apply border border-gray-200 bg-white text-gray-700
+           hover:bg-gray-50 hover:border-gray-300;
+  }
+  
+  .card {
+    @apply bg-surface rounded-xl shadow-sm border border-gray-200/80
+           hover:shadow-md hover:border-primary/20 transition-all duration-200;
+  }
+  
+  .input {
+    @apply w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg
+           text-gray-900 placeholder-gray-400
+           focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50
+           hover:border-gray-300 transition-colors duration-200;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-primary {
+    @apply bg-primary/10 text-primary-dark;
+  }
+
+  .badge-secondary {
+    @apply bg-gray-100 text-gray-700;
+  }
+} 
