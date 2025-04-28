@@ -1,31 +1,15 @@
+import { Contact } from "./contact.types";
+import { Company } from "./company.types";
+
 export interface HubSpotConfig {
   apiKey: string;
   baseUrl: string;
   version: string;
 }
 
-export interface Contact {
-  id: string;
-  properties: {
-    firstname?: string;
-    lastname?: string;
-    email: string;
-    phone?: string;
-    company?: string;
-    jobtitle?: string;
-    website?: string;
-    address?: string;
-    city?: string;
-    state?: string;
-    country?: string;
-    lifecyclestage?: string;
-    createdate?: string;
-    lastmodifieddate?: string;
-  };
-}
-
-export interface ContactResponse {
-  results: Contact[];
+export interface HubSpotApiResponse<T> {
+  results: T[];
+  total: number;
   paging?: {
     next?: {
       after: string;
@@ -39,4 +23,9 @@ export interface HubSpotService {
   createContact(properties: Record<string, string>): Promise<Contact>;
   updateContact(id: string, properties: Record<string, string>): Promise<void>;
   deleteContact(id: string): Promise<void>;
-} 
+  getCompanies(): Promise<Company[]>;
+  getCompanyById(id: string): Promise<Company>;
+  createCompany(properties: Record<string, string>): Promise<Company>;
+  updateCompany(id: string, properties: Record<string, string>): Promise<void>;
+  deleteCompany(id: string): Promise<void>;
+}

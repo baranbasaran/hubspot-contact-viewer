@@ -1,6 +1,7 @@
-import { Request, Response } from 'express';
-import { HubSpotService } from '../services/hubspot.service';
-import { ApiResponse, Contact, ErrorResponse } from '../types/contact.types';
+import { Request, Response } from "express";
+import { HubSpotService } from "../services/hubspot.service";
+import { Contact, ContactProperties } from "../types/contact.types";
+import { ResponseHandler } from "../utils/responseHandler";
 
 export class ContactsController {
   private hubspotService: HubSpotService;
@@ -9,104 +10,75 @@ export class ContactsController {
     this.hubspotService = hubspotService;
   }
 
-  async getContacts(req: Request, res: Response): Promise<void> {
+  getContacts = async (req: Request, res: Response) => {
     try {
-      const contacts = await this.hubspotService.getContacts();
-      const response: ApiResponse<Contact[]> = {
-        success: true,
-        data: contacts,
-        timestamp: new Date().toISOString(),
-      };
-      res.json(response);
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const contactsData = await this.hubspotService.getContacts();
+      ResponseHandler.success(res, contactsData);
     } catch (error) {
-      const response: ErrorResponse = {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch contacts',
-        timestamp: new Date().toISOString(),
-      };
-      res.status(500).json(response);
+      console.error("Error in getContacts:", error);
+      ResponseHandler.error(res, error);
     }
-  }
+  };
 
-  async createContact(req: Request, res: Response): Promise<void> {
+  createContact = async (req: Request, res: Response) => {
     try {
-      const { properties } = req.body;
-      if (!properties || typeof properties !== 'object') {
-        const response: ErrorResponse = {
-          success: false,
-          error: 'Invalid request: properties object is required',
-          timestamp: new Date().toISOString(),
-        };
-        res.status(400).json(response);
-        return;
+      const properties: ContactProperties = req.body.properties;
+
+      if (!properties || typeof properties !== "object") {
+        return ResponseHandler.validationError(
+          res,
+          "Invalid contact properties"
+        );
       }
 
       const contact = await this.hubspotService.createContact(properties);
-      const response: ApiResponse<Contact> = {
-        success: true,
-        data: contact,
-        timestamp: new Date().toISOString(),
-      };
-      res.status(201).json(response);
+      ResponseHandler.success(res, contact, 201);
     } catch (error) {
-      const response: ErrorResponse = {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to create contact',
-        timestamp: new Date().toISOString(),
-      };
-      res.status(500).json(response);
+      console.error("Error in createContact:", error);
+      ResponseHandler.error(res, error);
     }
-  }
+  };
 
-  async getContactById(req: Request, res: Response): Promise<void> {
+  getContactById = async (req: Request, res: Response) => {
     try {
       const contact = await this.hubspotService.getContactById(req.params.id);
-      const response: ApiResponse<Contact> = {
-        success: true,
-        data: contact,
-        timestamp: new Date().toISOString(),
-      };
-      res.json(response);
+      ResponseHandler.success(res, contact);
     } catch (error) {
-      const response: ErrorResponse = {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch contact',
-        timestamp: new Date().toISOString(),
-      };
-      res.status(500).json(response);
+      console.error("Error in getContactById:", error);
+      ResponseHandler.error(res, error);
     }
-  }
+  };
 
-  async deleteContact(req: Request, res: Response): Promise<void> {
+  updateContact = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      
-      if (!id) {
-        const response: ErrorResponse = {
-          success: false,
-          error: 'Contact ID is required',
-          timestamp: new Date().toISOString(),
-        };
-        res.status(400).json(response);
-        return;
+      const properties: ContactProperties = req.body.properties;
+
+      if (!properties || typeof properties !== "object") {
+        return ResponseHandler.validationError(
+          res,
+          "Invalid contact properties"
+        );
       }
 
-      await this.hubspotService.deleteContact(id);
-      
-      const response: ApiResponse<null> = {
-        success: true,
-        data: null,
-        timestamp: new Date().toISOString(),
-      };
-      
-      res.status(200).json(response);
+      await this.hubspotService.updateContact(id, properties);
+      ResponseHandler.success(res, null);
     } catch (error) {
-      const response: ErrorResponse = {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to delete contact',
-        timestamp: new Date().toISOString(),
-      };
-      res.status(500).json(response);
+      console.error("Error in updateContact:", error);
+      ResponseHandler.error(res, error);
     }
-  }
-} 
+  };
+
+  deleteContact = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      await this.hubspotService.deleteContact(id);
+      ResponseHandler.success(res, null);
+    } catch (error) {
+      console.error("Error in deleteContact:", error);
+      ResponseHandler.error(res, error);
+    }
+  };
+}

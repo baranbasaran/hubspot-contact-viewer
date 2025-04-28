@@ -1,53 +1,64 @@
-import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createContact } from '../api/contacts';
-import { Contact } from '../types/contact.types';
-import { Dialog, Transition } from '@headlessui/react';
-import { Fragment } from 'react';
-import { 
-  XMarkIcon, 
-  UserIcon, 
-  EnvelopeIcon, 
-  PhoneIcon, 
-  BuildingOfficeIcon, 
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createContact } from "../api/contacts";
+import { Contact } from "../types/contact.types";
+import { Dialog, Transition } from "@headlessui/react";
+import { Fragment } from "react";
+import {
+  XMarkIcon,
+  UserIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  BuildingOfficeIcon,
   BriefcaseIcon,
   CheckCircleIcon,
-  ExclamationCircleIcon
-} from '@heroicons/react/24/outline';
-import { CheckCircleIcon as CheckCircleIconSolid } from '@heroicons/react/24/solid';
+  ExclamationCircleIcon,
+} from "@heroicons/react/24/outline";
+import { CheckCircleIcon as CheckCircleIconSolid } from "@heroicons/react/24/solid";
 
 interface CreateContactFormProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export default function CreateContactForm({ isOpen, onClose }: CreateContactFormProps) {
+export default function CreateContactForm({
+  isOpen,
+  onClose,
+}: CreateContactFormProps) {
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState<Partial<Contact>>({
-    firstname: '',
-    lastname: '',
-    email: '',
-    phone: '',
-    company: '',
-    jobtitle: '',
+  const [formData, setFormData] = useState<
+    Partial<Contact> & { properties: NonNullable<Contact["properties"]> }
+  >({
+    properties: {
+      firstname: "",
+      lastname: "",
+      email: "",
+      phone: "",
+      company: "",
+      jobtitle: "",
+      city: "",
+    },
   });
   const [showSuccess, setShowSuccess] = useState(false);
 
   const createContactMutation = useMutation({
     mutationFn: createContact,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
         onClose();
         setFormData({
-          firstname: '',
-          lastname: '',
-          email: '',
-          phone: '',
-          company: '',
-          jobtitle: '',
+          properties: {
+            firstname: "",
+            lastname: "",
+            email: "",
+            phone: "",
+            company: "",
+            jobtitle: "",
+            city: "",
+          },
         });
       }, 1500);
     },
@@ -55,15 +66,22 @@ export default function CreateContactForm({ isOpen, onClose }: CreateContactForm
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createContactMutation.mutate(formData);
+    createContactMutation.mutate(formData.properties);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      properties: {
+        ...prev.properties,
+        [name]: value,
+      },
+    }));
   };
 
-  const inputClasses = "pl-10 block w-full rounded-xl bg-white border border-gray-200 text-gray-900 shadow-sm focus:border-primary focus:ring-primary sm:text-sm h-10";
+  const inputClasses =
+    "pl-10 block w-full rounded-xl bg-white border border-gray-200 text-gray-900 shadow-sm focus:border-primary focus:ring-primary sm:text-sm h-10";
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
@@ -77,7 +95,7 @@ export default function CreateContactForm({ isOpen, onClose }: CreateContactForm
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
+          <div className="fixed inset-0 bg-black/30" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
@@ -97,7 +115,9 @@ export default function CreateContactForm({ isOpen, onClose }: CreateContactForm
                     <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
                       <CheckCircleIconSolid className="h-10 w-10 text-green-600" />
                     </div>
-                    <h3 className="mt-4 text-lg font-medium text-gray-900">Contact Created Successfully!</h3>
+                    <h3 className="mt-4 text-lg font-medium text-gray-900">
+                      Contact Created Successfully!
+                    </h3>
                     <p className="mt-2 text-sm text-gray-500">
                       The new contact has been added to your HubSpot CRM.
                     </p>
@@ -105,12 +125,17 @@ export default function CreateContactForm({ isOpen, onClose }: CreateContactForm
                 ) : (
                   <>
                     <div className="bg-primary/5 px-6 py-4 border-b border-gray-200">
-                      <Dialog.Title as="div" className="flex items-center justify-between">
+                      <Dialog.Title
+                        as="div"
+                        className="flex items-center justify-between"
+                      >
                         <div className="flex items-center space-x-3">
                           <div className="p-2 bg-primary/10 rounded-lg">
                             <UserIcon className="h-5 w-5 text-primary" />
                           </div>
-                          <h3 className="text-lg font-medium text-gray-900">Create New Contact</h3>
+                          <h3 className="text-lg font-medium text-gray-900">
+                            Create New Contact
+                          </h3>
                         </div>
                         <button
                           type="button"
@@ -125,7 +150,10 @@ export default function CreateContactForm({ isOpen, onClose }: CreateContactForm
                     <form onSubmit={handleSubmit} className="p-6 space-y-5">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <label htmlFor="firstname" className="block text-sm font-medium text-gray-700">
+                          <label
+                            htmlFor="firstname"
+                            className="block text-sm font-medium text-gray-700"
+                          >
                             First Name
                           </label>
                           <div className="relative">
@@ -136,7 +164,7 @@ export default function CreateContactForm({ isOpen, onClose }: CreateContactForm
                               type="text"
                               name="firstname"
                               id="firstname"
-                              value={formData.firstname}
+                              value={formData.properties.firstname}
                               onChange={handleChange}
                               className={inputClasses}
                               placeholder="John"
@@ -144,7 +172,10 @@ export default function CreateContactForm({ isOpen, onClose }: CreateContactForm
                           </div>
                         </div>
                         <div className="space-y-1">
-                          <label htmlFor="lastname" className="block text-sm font-medium text-gray-700">
+                          <label
+                            htmlFor="lastname"
+                            className="block text-sm font-medium text-gray-700"
+                          >
                             Last Name
                           </label>
                           <div className="relative">
@@ -155,7 +186,7 @@ export default function CreateContactForm({ isOpen, onClose }: CreateContactForm
                               type="text"
                               name="lastname"
                               id="lastname"
-                              value={formData.lastname}
+                              value={formData.properties.lastname}
                               onChange={handleChange}
                               className={inputClasses}
                               placeholder="Doe"
@@ -165,7 +196,10 @@ export default function CreateContactForm({ isOpen, onClose }: CreateContactForm
                       </div>
 
                       <div className="space-y-1">
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                        <label
+                          htmlFor="email"
+                          className="block text-sm font-medium text-gray-700"
+                        >
                           Email <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
@@ -177,7 +211,7 @@ export default function CreateContactForm({ isOpen, onClose }: CreateContactForm
                             name="email"
                             id="email"
                             required
-                            value={formData.email}
+                            value={formData.properties.email}
                             onChange={handleChange}
                             className={inputClasses}
                             placeholder="john.doe@example.com"
@@ -186,7 +220,10 @@ export default function CreateContactForm({ isOpen, onClose }: CreateContactForm
                       </div>
 
                       <div className="space-y-1">
-                        <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+                        <label
+                          htmlFor="phone"
+                          className="block text-sm font-medium text-gray-700"
+                        >
                           Phone
                         </label>
                         <div className="relative">
@@ -197,7 +234,7 @@ export default function CreateContactForm({ isOpen, onClose }: CreateContactForm
                             type="tel"
                             name="phone"
                             id="phone"
-                            value={formData.phone}
+                            value={formData.properties.phone}
                             onChange={handleChange}
                             className={inputClasses}
                             placeholder="+1 (555) 123-4567"
@@ -206,7 +243,10 @@ export default function CreateContactForm({ isOpen, onClose }: CreateContactForm
                       </div>
 
                       <div className="space-y-1">
-                        <label htmlFor="company" className="block text-sm font-medium text-gray-700">
+                        <label
+                          htmlFor="company"
+                          className="block text-sm font-medium text-gray-700"
+                        >
                           Company
                         </label>
                         <div className="relative">
@@ -217,7 +257,7 @@ export default function CreateContactForm({ isOpen, onClose }: CreateContactForm
                             type="text"
                             name="company"
                             id="company"
-                            value={formData.company}
+                            value={formData.properties.company}
                             onChange={handleChange}
                             className={inputClasses}
                             placeholder="Acme Inc."
@@ -226,7 +266,10 @@ export default function CreateContactForm({ isOpen, onClose }: CreateContactForm
                       </div>
 
                       <div className="space-y-1">
-                        <label htmlFor="jobtitle" className="block text-sm font-medium text-gray-700">
+                        <label
+                          htmlFor="jobtitle"
+                          className="block text-sm font-medium text-gray-700"
+                        >
                           Job Title
                         </label>
                         <div className="relative">
@@ -237,10 +280,33 @@ export default function CreateContactForm({ isOpen, onClose }: CreateContactForm
                             type="text"
                             name="jobtitle"
                             id="jobtitle"
-                            value={formData.jobtitle}
+                            value={formData.properties.jobtitle}
                             onChange={handleChange}
                             className={inputClasses}
                             placeholder="Senior Manager"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label
+                          htmlFor="city"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          City
+                        </label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <BuildingOfficeIcon className="h-5 w-5 text-gray-400" />
+                          </div>
+                          <input
+                            type="text"
+                            name="city"
+                            id="city"
+                            value={formData.properties.city}
+                            onChange={handleChange}
+                            className={inputClasses}
+                            placeholder="New York"
                           />
                         </div>
                       </div>
@@ -249,11 +315,13 @@ export default function CreateContactForm({ isOpen, onClose }: CreateContactForm
                         <div className="rounded-lg bg-red-50 p-4 flex items-start">
                           <ExclamationCircleIcon className="h-5 w-5 text-red-400 mt-1 mr-2" />
                           <div>
-                            <h3 className="text-sm font-medium text-red-800">Error creating contact</h3>
+                            <h3 className="text-sm font-medium text-red-800">
+                              Error creating contact
+                            </h3>
                             <p className="text-sm text-red-700 mt-1">
-                              {createContactMutation.error instanceof Error 
-                                ? createContactMutation.error.message 
-                                : 'An unexpected error occurred'}
+                              {createContactMutation.error instanceof Error
+                                ? createContactMutation.error.message
+                                : "An unexpected error occurred"}
                             </p>
                           </div>
                         </div>
@@ -274,9 +342,25 @@ export default function CreateContactForm({ isOpen, onClose }: CreateContactForm
                         >
                           {createContactMutation.isPending ? (
                             <>
-                              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              <svg
+                                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                              >
+                                <circle
+                                  className="opacity-25"
+                                  cx="12"
+                                  cy="12"
+                                  r="10"
+                                  stroke="currentColor"
+                                  strokeWidth="4"
+                                ></circle>
+                                <path
+                                  className="opacity-75"
+                                  fill="currentColor"
+                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                ></path>
                               </svg>
                               Creating...
                             </>
@@ -298,4 +382,4 @@ export default function CreateContactForm({ isOpen, onClose }: CreateContactForm
       </Dialog>
     </Transition>
   );
-} 
+}

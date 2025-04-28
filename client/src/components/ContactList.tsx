@@ -1,56 +1,64 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import axios, { AxiosError } from 'axios'
-import { MagnifyingGlassIcon, UserIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
-import { useState } from 'react'
-import { Contact, ApiResponse, ErrorResponse } from '../types/contact.types'
-import ContactCard from './ContactCard'
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import axios, { AxiosError } from "axios";
+import {
+  MagnifyingGlassIcon,
+  UserIcon,
+  ArrowPathIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from "@heroicons/react/24/outline";
+import { useState } from "react";
+import { Contact } from "../types/contact.types";
+import { PaginatedResponse } from "../types/common.types";
+import ContactCard from "./ContactCard";
+import { fetchContacts } from "../api/contacts";
 
-const fetchContacts = async (): Promise<Contact[]> => {
-  try {
-    const { data } = await axios.get<ApiResponse<Contact[]>>('http://localhost:3001/api/contacts')
-    if (!data.success) {
-      throw new Error('Failed to fetch contacts')
-    }
-    return data.data
-  } catch (error) {
-    if (error instanceof AxiosError) {
-      const errorResponse = error.response?.data as ErrorResponse
-      throw new Error(errorResponse?.error || error.message)
-    }
-    throw error
-  }
-}
+const ITEMS_PER_PAGE = 9;
 
 export default function ContactList() {
-  const queryClient = useQueryClient()
-  const [searchTerm, setSearchTerm] = useState('')
-  
-  const { 
-    data: contacts = [], 
-    isLoading, 
-    error, 
+  const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const {
+    data: contactsData,
+    isLoading,
+    error,
+    isError,
     refetch,
-    isError 
-  } = useQuery({
-    queryKey: ['contacts'],
-    queryFn: fetchContacts,
-    retry: 2,
-    retryDelay: 1000,
-  })
+  } = useQuery<PaginatedResponse<Contact>>({
+    queryKey: ["contacts", currentPage],
+    queryFn: () => fetchContacts({ page: currentPage, limit: ITEMS_PER_PAGE }),
+  });
+
+  const { items: contacts = [], total = 0 } = contactsData || {
+    items: [],
+    total: 0,
+  };
+  const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
 
   const handleContactDeleted = () => {
-    queryClient.invalidateQueries({ queryKey: ['contacts'] })
-  }
+    queryClient.invalidateQueries({ queryKey: ["contacts"] });
+  };
 
-  const filteredContacts = contacts.filter(contact => {
-    const searchTermLower = searchTerm.toLowerCase()
+  const filteredContacts = contacts.filter((contact: Contact) => {
+    const searchTermLower = searchTerm.toLowerCase();
     return (
-      contact.properties.firstname?.toLowerCase().includes(searchTermLower) ||
-      contact.properties.lastname?.toLowerCase().includes(searchTermLower) ||
+      contact.properties.hs_full_name_or_email
+        ?.toLowerCase()
+        .includes(searchTermLower) ||
       contact.properties.email?.toLowerCase().includes(searchTermLower) ||
       contact.properties.company?.toLowerCase().includes(searchTermLower)
-    )
-  })
+    );
+  });
+
+  const handlePreviousPage = () => {
+    setCurrentPage((prev) => Math.max(1, prev - 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+  };
 
   if (isLoading) {
     return (
@@ -67,27 +75,28 @@ export default function ContactList() {
           </div>
         ))}
       </div>
-    )
+    );
   }
 
   if (isError) {
     return (
       <div className="bg-error/10 border border-error/20 rounded-xl p-6 text-center">
         <div className="text-error font-medium">
-          {error instanceof Error ? error.message : 'Failed to fetch contacts'}
+          {error instanceof Error ? error.message : "Failed to fetch contacts"}
         </div>
         <p className="text-sm text-error/70 mt-1">
-          There was an error connecting to the server. Please check your connection and try again.
+          There was an error connecting to the server. Please check your
+          connection and try again.
         </p>
-        <button 
-          onClick={() => refetch()} 
+        <button
+          onClick={() => refetch()}
           className="mt-4 btn btn-error-outline flex items-center justify-center mx-auto"
         >
           <ArrowPathIcon className="h-4 w-4 mr-2" />
           Try Again
         </button>
       </div>
-    )
+    );
   }
 
   return (
@@ -103,8 +112,8 @@ export default function ContactList() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <button 
-          onClick={() => refetch()} 
+        <button
+          onClick={() => refetch()}
           className="btn btn-outline"
           title="Refresh contacts"
         >
@@ -115,7 +124,9 @@ export default function ContactList() {
       {filteredContacts.length === 0 ? (
         <div className="text-center py-12 bg-gray-50/50 rounded-xl border border-gray-200/80">
           <UserIcon className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-4 text-lg font-medium text-gray-900">No contacts found</h3>
+          <h3 className="mt-4 text-lg font-medium text-gray-900">
+            No contacts found
+          </h3>
           <p className="mt-2 text-sm text-gray-500">
             Try adjusting your search to find what you're looking for.
           </p>
@@ -123,10 +134,15 @@ export default function ContactList() {
       ) : (
         <div>
           <div className="text-sm text-gray-500 mb-4">
-            Showing <span className="font-medium text-gray-700">{filteredContacts.length}</span> contacts
+            Showing{" "}
+            <span className="font-medium text-gray-700">
+              {filteredContacts.length}
+            </span>{" "}
+            of <span className="font-medium text-gray-700">{total}</span>{" "}
+            contacts
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredContacts.map((contact) => (
+            {filteredContacts.map((contact: Contact) => (
               <ContactCard
                 key={contact.id}
                 contact={contact}
@@ -134,8 +150,84 @@ export default function ContactList() {
               />
             ))}
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-6 flex items-center justify-between border-t border-gray-200 px-4 py-3 sm:px-6">
+              <div className="flex flex-1 justify-between sm:hidden">
+                <button
+                  onClick={handlePreviousPage}
+                  disabled={currentPage === 1}
+                  className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Next
+                </button>
+              </div>
+              <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm text-gray-700">
+                    Showing{" "}
+                    <span className="font-medium">
+                      {(currentPage - 1) * ITEMS_PER_PAGE + 1}
+                    </span>{" "}
+                    to{" "}
+                    <span className="font-medium">
+                      {Math.min(currentPage * ITEMS_PER_PAGE, total)}
+                    </span>{" "}
+                    of <span className="font-medium">{total}</span> results
+                  </p>
+                </div>
+                <div>
+                  <nav
+                    className="isolate inline-flex -space-x-px rounded-md shadow-sm"
+                    aria-label="Pagination"
+                  >
+                    <button
+                      onClick={handlePreviousPage}
+                      disabled={currentPage === 1}
+                      className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
+                    >
+                      <span className="sr-only">Previous</span>
+                      <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
+                    </button>
+                    {[...Array(totalPages)].map((_, i) => (
+                      <button
+                        key={i + 1}
+                        onClick={() => setCurrentPage(i + 1)}
+                        className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
+                          currentPage === i + 1
+                            ? "z-10 bg-primary text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                            : "text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-offset-0"
+                        }`}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+                    <button
+                      onClick={handleNextPage}
+                      disabled={currentPage === totalPages}
+                      className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
+                    >
+                      <span className="sr-only">Next</span>
+                      <ChevronRightIcon
+                        className="h-5 w-5"
+                        aria-hidden="true"
+                      />
+                    </button>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
-  )
-} 
+  );
+}

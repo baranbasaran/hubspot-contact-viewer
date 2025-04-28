@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useState } from "react";
 import {
   UserIcon,
   BuildingOfficeIcon,
   PhoneIcon,
   EnvelopeIcon,
   TrashIcon,
-} from '@heroicons/react/24/outline';
-import { Contact } from '../types/contact.types';
-import ContactModal from './ContactModal';
+} from "@heroicons/react/24/outline";
+import { Contact } from "../types/contact.types";
+import ContactModal from "./ContactModal";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { deleteContact } from "../api/contacts";
 
 interface ContactCardProps {
   contact: Contact;
@@ -16,23 +18,39 @@ interface ContactCardProps {
 
 export default function ContactCard({ contact, onDelete }: ContactCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteContact(contact.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      onDelete();
+    },
+  });
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm("Are you sure you want to delete this contact?")) {
+      await deleteMutation.mutate();
+    }
+  };
+
   const {
     properties: {
-      firstname,
-      lastname,
+      hs_full_name_or_email,
       email,
       phone,
       company,
       jobtitle,
+      city,
+      state,
+      country,
+      createdate,
+      lastmodifieddate,
+      lifecyclestage,
+      website,
     },
   } = contact;
-
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (window.confirm('Are you sure you want to delete this contact?')) {
-      onDelete();
-    }
-  };
 
   return (
     <>
@@ -49,7 +67,7 @@ export default function ContactCard({ contact, onDelete }: ContactCardProps) {
               </div>
               <div>
                 <h3 className="text-lg font-medium text-gray-900">
-                  {[firstname, lastname].filter(Boolean).join(' ') || 'Unknown Contact'}
+                  {hs_full_name_or_email || "Unknown Contact"}
                 </h3>
                 {jobtitle && (
                   <p className="text-sm text-gray-500">{jobtitle}</p>
@@ -96,4 +114,4 @@ export default function ContactCard({ contact, onDelete }: ContactCardProps) {
       />
     </>
   );
-} 
+}

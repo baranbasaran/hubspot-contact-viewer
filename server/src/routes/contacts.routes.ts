@@ -1,15 +1,24 @@
-import { Router } from 'express';
-import { ContactsController } from '../controllers/contacts.controller';
-import { HubSpotService } from '../services/hubspot.service';
-import { config } from '../config';
+import { Router } from "express";
+import { ContactsController } from "../controllers/contacts.controller";
+import { HubSpotService } from "../services/hubspot.service";
 
 const router = Router();
-const hubspotService = new HubSpotService(config.hubspot);
+const hubspotService = new HubSpotService();
 const contactsController = new ContactsController(hubspotService);
 
-router.get('/', (req, res) => contactsController.getContacts(req, res));
-router.post('/', (req, res) => contactsController.createContact(req, res));
-router.get('/:id', (req, res) => contactsController.getContactById(req, res));
-router.delete('/:id', (req, res) => contactsController.deleteContact(req, res));
+// Get all contacts with pagination
+router.get("/", contactsController.getContacts);
 
-export default router; 
+// Create a new contact
+router.post("/", contactsController.createContact);
+
+// Get contact by ID
+router.get("/:id", contactsController.getContactById);
+
+// Update contact
+router.patch("/:id", contactsController.updateContact);
+
+// Delete contact
+router.delete("/:id", contactsController.deleteContact);
+
+export default router;
