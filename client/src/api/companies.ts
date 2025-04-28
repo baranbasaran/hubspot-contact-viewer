@@ -1,78 +1,34 @@
-import axios from "axios";
+import apiClient from "./axios";
 import { Company } from "../types/company.types";
-import { ApiResponse, PaginatedResponse } from "../types/common.types";
-
-const API_BASE_URL = "http://localhost:3001/api";
+import { PaginatedResponse } from "../types/common.types";
 
 export const fetchCompanies = async (
   page = 1,
   limit = 10
 ): Promise<PaginatedResponse<Company>> => {
-  try {
-    const { data } = await axios.get<ApiResponse<PaginatedResponse<Company>>>(
-      `${API_BASE_URL}/companies`,
-      {
-        params: { page, limit },
-      }
-    );
-    if (!data.success) {
-      throw new Error("Failed to fetch companies");
-    }
-    return data.data;
-  } catch (error) {
-    console.error("Error fetching companies:", error);
-    throw error;
-  }
+  const response = await apiClient.get(`/api/companies`, {
+    params: { page, limit },
+  });
+  return response.data.data;
 };
 
 export const fetchCompanyById = async (id: string): Promise<Company> => {
-  try {
-    const { data } = await axios.get<ApiResponse<Company>>(
-      `${API_BASE_URL}/companies/${id}`
-    );
-    if (!data.success) {
-      throw new Error("Failed to fetch company");
-    }
-    return data.data;
-  } catch (error) {
-    console.error("Error fetching company:", error);
-    throw error;
-  }
+  const response = await apiClient.get(`/api/companies/${id}`);
+  return response.data.data;
 };
 
 export const createCompany = async (
   companyData: Partial<Company>
 ): Promise<Company> => {
-  try {
-    const { data } = await axios.post<ApiResponse<Company>>(
-      `${API_BASE_URL}/companies`,
-      companyData
-    );
-    if (!data.success) {
-      throw new Error("Failed to create company");
-    }
-    return data.data;
-  } catch (error) {
-    console.error("Error creating company:", error);
-    throw error;
-  }
+  const response = await apiClient.post(`/api/companies`, companyData);
+  return response.data.data;
 };
 
 export const associateContactWithCompany = async (
   contactId: string,
   companyId: string
 ): Promise<void> => {
-  try {
-    const { data } = await axios.post<ApiResponse<void>>(
-      `${API_BASE_URL}/contacts/${contactId}/companies/${companyId}`
-    );
-    if (!data.success) {
-      throw new Error("Failed to associate contact with company");
-    }
-  } catch (error) {
-    console.error("Error associating contact with company:", error);
-    throw error;
-  }
+  await apiClient.post(`/api/contacts/${contactId}/companies/${companyId}`);
 };
 
 export const getAssociatedCompanies = async (
@@ -80,17 +36,8 @@ export const getAssociatedCompanies = async (
   page = 1,
   limit = 10
 ): Promise<PaginatedResponse<Company>> => {
-  try {
-    const { data } = await axios.get<ApiResponse<PaginatedResponse<Company>>>(
-      `${API_BASE_URL}/contacts/${contactId}/companies`,
-      { params: { page, limit } }
-    );
-    if (!data.success) {
-      throw new Error("Failed to fetch associated companies");
-    }
-    return data.data;
-  } catch (error) {
-    console.error("Error fetching associated companies:", error);
-    throw error;
-  }
+  const response = await apiClient.get(`/api/contacts/${contactId}/companies`, {
+    params: { page, limit },
+  });
+  return response.data.data;
 };

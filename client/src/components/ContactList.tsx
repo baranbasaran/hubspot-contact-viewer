@@ -1,5 +1,4 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import axios, { AxiosError } from "axios";
 import {
   MagnifyingGlassIcon,
   UserIcon,
